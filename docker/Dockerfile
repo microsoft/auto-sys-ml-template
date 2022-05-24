@@ -1,0 +1,39 @@
+# tags: https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch/tags?quick-deploy=false
+FROM nvcr.io/nvidia/pytorch:${YEAR_MONTH}-py3
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
+    build-essential \
+    cmake \
+    g++-7 \
+    git \
+    gpg \
+    curl \
+    vim \
+    wget \
+    ca-certificates \
+    libjpeg-dev \
+    libpng-dev \
+    librdmacm1 \
+    libibverbs1 \
+    ibverbs-providers \
+    openjdk-8-jdk-headless \
+    openssh-client \
+    openssh-server \
+    libsm6 \
+    libxext6 \
+    ffmpeg \
+    libfontconfig1 \
+    libxrender1 \
+    libgl1-mesa-glx &&\
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN pip install click termcolor future python-dateutil \
+    azureml-core azureml-mlflow \
+    opencv-python scipy 
+
+# jsonargparse[signatures] does not work in docker, so need lightning[extra]
+# in conda, jsonargparse[signatures] is enough 
+RUN pip install pytorch-lightning[extra] einops
+# RUN pip install pytorch-lightning jsonargparse[signatures] einops 
