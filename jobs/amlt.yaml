@@ -1,0 +1,85 @@
+# For field details: https://amulet-docs.azurewebsites.net/config_file.html
+description: Templated experiment - mnist
+
+# Docker environment (repo/image:tag)
+# Install custom dependencies in the image using the optional "image_setup" field
+# Set up the container and environment using the optional "setup" field
+environment:
+  registry: nvcr.io # ex: docker.io (default), reg.azurecr.io
+  image: nvidia/pytorch:22.04-py3 # ex: microsoft_pytorch:v1.2.0_gpu_cuda9.0_py36_release_gpuenv_hvd0.16.2
+  # check for latest tags https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch/tags
+  setup:
+    - pip install -r requirements.txt
+    # ex: sudo apt-get install build-essential, pip install matplotlib --user
+
+# Experiment source code. This section is optional.
+# $CONFIG_DIR is expanded to the directory of this config file.
+code:
+  local_dir: $CONFIG_DIR/../ # ex: $CONFIG_DIR/src
+
+# Optional field.
+data:
+  local_dir: $CONFIG_DIR/../data # ex: $CONFIG_DIR/data
+  remote_dir: lightning_template/data
+
+# SKU usage: G1 (single GPU), G4 (quad GPU), G4-V100 (1 machine, 4 V100 gpus), etc...
+jobs:
+  # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_single_node_mlflow template-mnist
+  - name: train_single_node_mlflow
+    sku: G1
+    submit_args:
+      env:
+        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
+      container_args:
+        shm_size: 650g
+    command:
+      - python train.py trainer.gpus=1 trainer.max_epochs=50 logger=mlflow
+
+  # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_single_node_tensorboard template-mnist
+  - name: train_single_node_tensorboard
+    sku: G1
+    submit_args:
+      env:
+        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
+      container_args:
+        shm_size: 650g
+    command:
+      - python train.py trainer.gpus=1 trainer.max_epochs=50 logger=tensorboard
+
+  # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_single_node_many_loggers template-mnist
+  - name: train_single_node_many_loggers
+    sku: G1
+    submit_args:
+      env:
+        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
+      container_args:
+        shm_size: 650g
+    sku: G1
+    command:
+      - python train.py trainer.gpus=1 trainer.max_epochs=50 logger=many_loggers
+
+  # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_single_node_4_gpus template-mnist
+  - name: train_single_node_4_gpus
+    sku: G4
+    mpi: False
+    process_count_per_node: 4
+    submit_args:
+      env:
+        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
+      container_args:
+        shm_size: 650g
+    command:
+      - python train.py trainer.gpus=4 +trainer.strategy=ddp trainer.max_epochs=50 logger=tensorboard
+
+  # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_dist_2_nodes_4_gpus template-mnist
+  - name: train_dist_2_nodes_4_gpus
+    sku: 2xG4
+    process_count_per_node: 4
+    mpi: False
+    submit_args:
+      env:
+        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
+      container_args:
+        shm_size: 650g
+    command:
+      - python train.py trainer.gpus=4 +trainer.num_nodes=2 +trainer.strategy=ddp trainer.max_epochs=50 logger=tensorboard
