@@ -24,17 +24,6 @@ data:
 
 # SKU usage: G1 (single GPU), G4 (quad GPU), G4-V100 (1 machine, 4 V100 gpus), etc...
 jobs:
-  # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_single_node_mlflow template-mnist
-  - name: train_single_node_mlflow
-    sku: G1
-    submit_args:
-      env:
-        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
-      container_args:
-        shm_size: 650g
-    command:
-      - python train.py trainer.gpus=1 trainer.max_epochs=50 logger=mlflow
-
   # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_single_node_tensorboard template-mnist
   - name: train_single_node_tensorboard
     sku: G1
@@ -45,18 +34,6 @@ jobs:
         shm_size: 650g
     command:
       - python train.py trainer.gpus=1 trainer.max_epochs=50 logger=tensorboard
-
-  # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_single_node_many_loggers template-mnist
-  - name: train_single_node_many_loggers
-    sku: G1
-    submit_args:
-      env:
-        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
-      container_args:
-        shm_size: 650g
-    sku: G1
-    command:
-      - python train.py trainer.gpus=1 trainer.max_epochs=50 logger=many_loggers
 
   # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_single_node_4_gpus template-mnist
   - name: train_single_node_4_gpus
