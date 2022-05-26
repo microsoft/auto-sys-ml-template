@@ -22,8 +22,6 @@ data_dir: ${original_work_dir}/data/
 
 print_config: True
 
-ignore_warnings: True
-
 seed: null
 
 name: "default"
