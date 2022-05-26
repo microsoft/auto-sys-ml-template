@@ -2,13 +2,13 @@ import hydra
 from omegaconf import DictConfig
 
 
-@hydra.main(config_path="configs/", config_name="eval.yaml")
+@hydra.main(config_path="../configs/", config_name="eval.yaml")
 def main(config: DictConfig):
 
     # Imports can be nested inside @hydra.main to optimize tab completion
     # https://github.com/facebookresearch/hydra/issues/934
+    from pipelines.eval_pipeline import eval
     from src import utils
-    from src.eval_pipeline import eval
 
     # Applies optional utilities
     utils.extras(config)
