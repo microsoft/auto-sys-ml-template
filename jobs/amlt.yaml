@@ -24,19 +24,19 @@ data:
 
 # SKU usage: G1 (single GPU), G4 (quad GPU), G4-V100 (1 machine, 4 V100 gpus), etc...
 jobs:
-  # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_single_node_tensorboard template-mnist
-  - name: train_single_node_tensorboard
-    sku: G1
+  # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_1_node_1_gpu ml-template-mnist
+  - name: train_1_node_1_gpu
+    sku: 1xG1
     submit_args:
       env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
       container_args:
         shm_size: 650g
     command:
-      - python train.py trainer.gpus=1 trainer.max_epochs=50 logger=tensorboard
+      - python src/train.py trainer.gpus=1 trainer.max_epochs=50 logger=tensorboard
 
-  # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_single_node_4_gpus template-mnist
-  - name: train_single_node_4_gpus
-    sku: G4
+  # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_1_node_4_gpus ml-template-mnist
+  - name: train_1_node_4_gpus
+    sku: 1xG4
     mpi: False
     process_count_per_node: 4
     submit_args:
@@ -44,10 +44,10 @@ jobs:
       container_args:
         shm_size: 650g
     command:
-      - python train.py trainer.gpus=4 +trainer.strategy=ddp trainer.max_epochs=50 logger=tensorboard
+      - python src/train.py trainer.gpus=4 +trainer.strategy=ddp trainer.max_epochs=50 logger=tensorboard
 
-  # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_dist_2_nodes_4_gpus template-mnist
-  - name: train_dist_2_nodes_4_gpus
+  # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_distributed_2_nodes_4_gpus ml-template-mnist
+  - name: train_distributed_2_nodes_4_gpus
     sku: 2xG4
     process_count_per_node: 4
     mpi: False
@@ -56,4 +56,4 @@ jobs:
       container_args:
         shm_size: 650g
     command:
-      - python train.py trainer.gpus=4 +trainer.num_nodes=2 +trainer.strategy=ddp trainer.max_epochs=50 logger=tensorboard
+      - python src/train.py trainer.gpus=4 +trainer.num_nodes=2 +trainer.strategy=ddp trainer.max_epochs=50 logger=tensorboard
