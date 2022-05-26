@@ -8,10 +8,6 @@ def main(config: DictConfig):
     # Imports can be nested inside @hydra.main to optimize tab completion
     # https://github.com/facebookresearch/hydra/issues/934
     from pipelines.eval_pipeline import eval
-    from src import utils
-
-    # Applies optional utilities
-    utils.extras(config)
 
     # Evaluate model
     return eval(config)
