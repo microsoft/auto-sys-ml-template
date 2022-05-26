@@ -1,4 +1,7 @@
 # tags: https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch/tags?quick-deploy=false
+
+ARG YEAR_MONTH=22.04
+
 FROM nvcr.io/nvidia/pytorch:${YEAR_MONTH}-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
