@@ -37,26 +37,12 @@ repos:
       - id: black
         name: Format code
 
-  # python import sorting
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
-    hooks:
-      - id: isort
-        name: Format imports
-
   # python docstring formatting
   - repo: https://github.com/myint/docformatter
     rev: v1.4
     hooks:
       - id: docformatter
         args: [--in-place, --wrap-summaries, "99", --wrap-descriptions, "92"]
-
-  # python code analysis
-  - repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
-    hooks:
-      - id: flake8
-        name: Check PEP8
 
   # yaml formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
