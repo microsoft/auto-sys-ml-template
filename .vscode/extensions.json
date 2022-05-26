@@ -17,7 +17,8 @@
         "yzhang.markdown-all-in-one",
         "TrungNgo.autoflake",
         "Shan.code-settings-sync",
-        "njpwerner.autodocstring"
+        "njpwerner.autodocstring",
+        "jbockle.jbockle-format-files"
     ],
     // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
     "unwantedRecommendations": []

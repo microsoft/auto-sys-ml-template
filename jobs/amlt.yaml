@@ -28,8 +28,7 @@ jobs:
   - name: train_single_node_tensorboard
     sku: G1
     submit_args:
-      env:
-        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
+      env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
       container_args:
         shm_size: 650g
     command:
@@ -41,8 +40,7 @@ jobs:
     mpi: False
     process_count_per_node: 4
     submit_args:
-      env:
-        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
+      env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
       container_args:
         shm_size: 650g
     command:
@@ -54,8 +52,7 @@ jobs:
     process_count_per_node: 4
     mpi: False
     submit_args:
-      env:
-        {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True}
+      env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
       container_args:
         shm_size: 650g
     command:
