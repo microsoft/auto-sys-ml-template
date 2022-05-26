@@ -32,6 +32,7 @@ def get_logger(name=__name__) -> logging.Logger:
 
 log = get_logger(__name__)
 
+
 @rank_zero_only
 def log_hyperparameters(
     config: DictConfig,

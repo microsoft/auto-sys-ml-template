@@ -6,6 +6,7 @@ from omegaconf import DictConfig
 from pytorch_lightning import (LightningDataModule, LightningModule, Trainer,
                                seed_everything)
 from pytorch_lightning.loggers import LightningLoggerBase
+
 from src import utils
 
 log = utils.get_logger(__name__)
@@ -27,7 +28,9 @@ def eval(config: DictConfig) -> None:
 
     # Convert relative ckpt path to absolute path if necessary
     if not os.path.isabs(config.ckpt_path):
-        config.ckpt_path = os.path.join(hydra.utils.get_original_cwd(), config.ckpt_path)
+        config.ckpt_path = os.path.join(
+            hydra.utils.get_original_cwd(), config.ckpt_path
+        )
 
     # Init lightning datamodule
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")

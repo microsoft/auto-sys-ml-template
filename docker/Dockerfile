@@ -31,9 +31,9 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
 
 RUN pip install click termcolor future python-dateutil \
     azureml-core azureml-mlflow \
-    opencv-python scipy 
+    opencv-python scipy
 
 # jsonargparse[signatures] does not work in docker, so need lightning[extra]
-# in conda, jsonargparse[signatures] is enough 
+# in conda, jsonargparse[signatures] is enough
 RUN pip install pytorch-lightning[extra] einops
-# RUN pip install pytorch-lightning jsonargparse[signatures] einops 
+# RUN pip install pytorch-lightning jsonargparse[signatures] einops

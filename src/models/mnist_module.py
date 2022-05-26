@@ -3,9 +3,10 @@ from typing import Any, List
 
 import torch
 from pytorch_lightning import LightningModule
-from src.models.components.simple_dense_net import SimpleDenseNet
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
+
+from src.models.components.simple_dense_net import SimpleDenseNet
 
 
 class MNISTLitModule(LightningModule):
@@ -93,7 +94,9 @@ class MNISTLitModule(LightningModule):
     def validation_epoch_end(self, outputs: List[Any]):
         acc = self.val_acc.compute()  # get val accuracy from current epoch
         self.val_acc_best.update(acc)
-        self.log("val/acc_best", self.val_acc_best.compute(), on_epoch=True, prog_bar=True)
+        self.log(
+            "val/acc_best", self.val_acc_best.compute(), on_epoch=True, prog_bar=True
+        )
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
@@ -122,5 +125,7 @@ class MNISTLitModule(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         return torch.optim.Adam(
-            params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+            params=self.parameters(),
+            lr=self.hparams.lr,
+            weight_decay=self.hparams.weight_decay,
         )
