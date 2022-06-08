@@ -10,6 +10,7 @@ environment:
   # check for latest tags https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch/tags
   setup:
     - pip install -r requirements.txt
+    - pip install -e .
     # ex: sudo apt-get install build-essential, pip install matplotlib --user
 
 # Experiment source code. This section is optional.
