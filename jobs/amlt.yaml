@@ -33,7 +33,7 @@ jobs:
       container_args:
         shm_size: 650g
     command:
-      - python src/train.py trainer.gpus=1 trainer.max_epochs=50 logger=tensorboard
+      - python src/train.py -c configs/train.yaml --trainer.gpus=1 --trainer.max_epochs=50
 
   # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_1_node_4_gpus ml-template-mnist
   - name: train_1_node_4_gpus
@@ -45,7 +45,7 @@ jobs:
       container_args:
         shm_size: 650g
     command:
-      - python src/train.py trainer.gpus=4 +trainer.strategy=ddp trainer.max_epochs=50 logger=tensorboard
+      - python src/train.py -c configs/train.yaml --trainer.gpus=4 --trainer.max_epochs=50
 
   # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_distributed_2_nodes_4_gpus ml-template-mnist
   - name: train_distributed_2_nodes_4_gpus
@@ -57,4 +57,4 @@ jobs:
       container_args:
         shm_size: 650g
     command:
-      - python src/train.py trainer.gpus=4 +trainer.num_nodes=2 +trainer.strategy=ddp trainer.max_epochs=50 logger=tensorboard
+      - python src/train.py -c configs/train.yaml --trainer.gpus=4 --trainer.num_nodes=2 --trainer.max_epochs=50

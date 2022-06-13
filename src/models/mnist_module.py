@@ -6,8 +6,6 @@ from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
 
-from src.models.components.simple_dense_net import SimpleDenseNet
-
 
 class MNISTLitModule(LightningModule):
     """Example of LightningModule for MNIST classification.
@@ -33,7 +31,7 @@ class MNISTLitModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=["net"])
 
         self.net = net
 
@@ -79,7 +77,7 @@ class MNISTLitModule(LightningModule):
 
     def training_epoch_end(self, outputs: List[Any]):
         # `outputs` is a list of dicts returned from `training_step()`
-        pass
+        self.train_acc.reset()
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
@@ -98,6 +96,8 @@ class MNISTLitModule(LightningModule):
             "val/acc_best", self.val_acc_best.compute(), on_epoch=True, prog_bar=True
         )
 
+        self.val_acc.reset()  # reset val accuracy for next epoch
+
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
 
@@ -109,13 +109,7 @@ class MNISTLitModule(LightningModule):
         return {"loss": loss, "preds": preds, "targets": targets}
 
     def test_epoch_end(self, outputs: List[Any]):
-        pass
-
-    def on_epoch_end(self):
-        # reset metrics at the end of every epoch
-        self.train_acc.reset()
         self.test_acc.reset()
-        self.val_acc.reset()
 
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.

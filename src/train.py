@@ -1,15 +1,26 @@
-import hydra
-from omegaconf import DictConfig
+import os
+
+from pytorch_lightning.utilities.cli import LightningCLI
+
+from datamodules.mnist_datamodule import MNISTDataModule
+from models.mnist_module import MNISTLitModule
 
 
-@hydra.main(config_path="../configs/", config_name="train.yaml")
-def main(config: DictConfig):
-    # Imports can be nested inside @hydra.main to optimize tab completion
-    # https://github.com/facebookresearch/hydra/issues/934
-    from pipelines.train_pipeline import train
+def main():
+    # Initialize Lightning with the model and data modules, and instruct it to parse the config yml
+    cli = LightningCLI(
+        model_class=MNISTLitModule,
+        datamodule_class=MNISTDataModule,
+        seed_everything_default=42,
+        save_config_overwrite=True,
+        run=False,
+        auto_registry=True,
+        parser_kwargs={"parser_mode": "omegaconf", "error_handler": None},
+    )
+    os.makedirs(cli.trainer.default_root_dir, exist_ok=True)
 
-    # Train model
-    return train(config)
+    # fit() runs the training
+    cli.trainer.fit(cli.model, datamodule=cli.datamodule)
 
 
 if __name__ == "__main__":

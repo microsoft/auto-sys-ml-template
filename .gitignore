@@ -17,6 +17,7 @@ data/
 
 # logs
 logs/
+outputs/
 
 # env
 .env

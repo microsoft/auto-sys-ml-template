@@ -1,6 +1,0 @@
-# train with many loggers at once
-
-defaults:
-  - mlflow.yaml
-  - tensorboard.yaml
-  - wandb.yaml

@@ -5,10 +5,6 @@ torchvision>=0.11.0
 pytorch-lightning>=1.5.10
 torchmetrics>=0.7.0
 
-# --------- hydra --------- #
-hydra-core>=1.1.0
-hydra-colorlog>=1.1.0
-
 # --------- loggers --------- #
 mlflow
 azureml-mlflow
