@@ -38,5 +38,5 @@ RUN pip install click termcolor future python-dateutil \
 
 # jsonargparse[signatures] does not work in docker, so need lightning[extra]
 # in conda, jsonargparse[signatures] is enough
-RUN pip install pytorch-lightning[extra] einops
+RUN pip install pytorch-lightning[extra] einops pre-commit pytest
 # RUN pip install pytorch-lightning jsonargparse[signatures] einops
