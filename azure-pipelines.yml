@@ -52,6 +52,7 @@ stages:
                   $(tagCurrentNvidia)
               ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
                 tags: |
+                  $(tagCurrentNvidia)
                   $(tagLatestNvidia)
 
           - bash: |
@@ -79,6 +80,7 @@ stages:
                   $(tagCurrentConda)
               ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
                 tags: |
+                  $(tagCurrentConda)
                   $(tagLatestConda)
                   $(tagLatest)
 
