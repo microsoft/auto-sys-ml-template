@@ -36,7 +36,7 @@ stages:
     displayName: Build docker; run pytests on built images
     jobs:
       - job: BuildDockerNvidiaBasePipInstall
-        displayName: nvidia base and pip install
+        displayName: docker build nvidia base; run pytest
         pool:
           vmImage: $(vmImageName)
         steps:
@@ -47,9 +47,12 @@ stages:
               repository: $(imageRepository)
               dockerfile: $(dockerfilenvidiaPath)
               containerRegistry: $(dockerRegistryServiceConnection)
-              tags: |
-                $(tagCurrentNvidia)
-                $(tagLatestNvidia)
+              ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
+                tags: |
+                  $(tagCurrentNvidia)
+              ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+                tags: |
+                  $(tagLatestNvidia)
 
           - bash: |
               docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagCurrentNvidia)
@@ -60,7 +63,7 @@ stages:
             displayName: Run Pytest on Current Build
 
       - job: BuildDockerAzureMLBaseAndConda
-        displayName: azureml base and conda env
+        displayName: docker build azureml base; run pytest
         pool:
           vmImage: $(vmImageName)
         steps:
@@ -71,10 +74,13 @@ stages:
               repository: $(imageRepository)
               dockerfile: $(dockerfilecondaPath)
               containerRegistry: $(dockerRegistryServiceConnection)
-              tags: |
-                $(tagCurrentConda)
-                $(tagLatestConda)
-                $(tagLatest)
+              ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
+                tags: |
+                  $(tagCurrentConda)
+              ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+                tags: |
+                  $(tagLatestConda)
+                  $(tagLatest)
 
           - bash: |
               docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagCurrentConda)
@@ -84,11 +90,8 @@ stages:
               docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
             displayName: Run Pytest on Current Build
 
-  - stage: PyTestOnLatestTags
-    displayName: Run pytests on latest-conda, latest-nvidia tags
-    jobs:
       - job: NvidiaBaseTagLatestPytest
-        displayName: pytest nvidia-base:latest
+        displayName: run pytest latest-nvidia
         pool:
           vmImage: $(vmImageName)
         steps:
@@ -109,7 +112,7 @@ stages:
             displayName: Run Pytest on Latest Tag
 
       - job: AzureMLCondaBaseTagLatestPytest
-        displayName: pytest azureml-conda-base:latest
+        displayName: run pytest latest-conda
         pool:
           vmImage: $(vmImageName)
         steps:
