@@ -17,9 +17,10 @@ variables:
   containerRegistry: "commondockerimages.azurecr.io"
   dockerfilenvidiaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_nvidia"
   dockerfilecondaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_conda"
-  tagDate: "$(Build.SourceBranchName)_$(Build.BuildNumber)"
-  tagConda: "latest-nvidia"
-  tagNvidia: "latest-conda"
+  tagCurrentNvidia: "$(Build.SourceBranchName)_$(Build.BuildNumber)-nvidia"
+  tagCurrentConda: "$(Build.SourceBranchName)_$(Build.BuildNumber)-conda"
+  tagLatestConda: "latest-nvidia"
+  tagLatestNvidia: "latest-conda"
   tagLatest: "latest"
 
   # Agent VM image name
@@ -31,8 +32,8 @@ variables:
 
 stages:
   # docs: https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-  - stage: BuildDockerImages
-    displayName: docker build and run tests
+  - stage: BuildDockerImagesAndRunPytest
+    displayName: Build docker; run pytests on built images
     jobs:
       - job: BuildDockerNvidiaBasePipInstall
         displayName: nvidia base and pip install
@@ -40,15 +41,23 @@ stages:
           vmImage: $(vmImageName)
         steps:
           - task: Docker@2
-            displayName: build and push image
+            displayName: Build and Push Image
             inputs:
               command: buildAndPush
               repository: $(imageRepository)
               dockerfile: $(dockerfilenvidiaPath)
               containerRegistry: $(dockerRegistryServiceConnection)
               tags: |
-                $(tagDate)
-                $(tagNvidia)
+                $(tagCurrentNvidia)
+                $(tagLatestNvidia)
+
+          - bash: |
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagCurrentNvidia)
+            displayName: Run docker container
+
+          - script: |
+              docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
+            displayName: Run Pytest on Current Build
 
       - job: BuildDockerAzureMLBaseAndConda
         displayName: azureml base and conda env
@@ -56,13 +65,66 @@ stages:
           vmImage: $(vmImageName)
         steps:
           - task: Docker@2
-            displayName: build and push image
+            displayName: Build and Push Image
             inputs:
               command: buildAndPush
               repository: $(imageRepository)
               dockerfile: $(dockerfilecondaPath)
               containerRegistry: $(dockerRegistryServiceConnection)
               tags: |
-                $(tagDate)-conda
-                $(tagConda)
+                $(tagCurrentConda)
+                $(tagLatestConda)
                 $(tagLatest)
+
+          - bash: |
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagCurrentConda)
+            displayName: Run docker container
+
+          - script: |
+              docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
+            displayName: Run Pytest on Current Build
+
+  - stage: PyTestOnLatestTags
+    displayName: Run pytests on latest-conda, latest-nvidia tags
+    jobs:
+      - job: NvidiaBaseTagLatestPytest
+        displayName: pytest nvidia-base:latest
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - checkout: self
+
+          - task: Docker@2
+            displayName: Login to ACR
+            inputs:
+              command: login
+              containerRegistry: $(dockerRegistryServiceConnection)
+
+          - script: |
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagLatestNvidia)
+            displayName: docker pull and run
+
+          - script: |
+              docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
+            displayName: Run Pytest on Latest Tag
+
+      - job: AzureMLCondaBaseTagLatestPytest
+        displayName: pytest azureml-conda-base:latest
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - checkout: self
+
+          - task: Docker@2
+            displayName: Login to ACR
+            inputs:
+              command: login
+              containerRegistry: $(dockerRegistryServiceConnection)
+
+          - script: |
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagLatestConda)
+            displayName: docker pull and run
+
+          - script: |
+              docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
+            displayName: Run Pytest on Latest Tag

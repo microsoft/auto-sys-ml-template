@@ -93,7 +93,6 @@ dependencies:
       - google-auth==2.7.0
       - google-auth-oauthlib==0.4.6
       - grpcio==1.46.3
-      - hydra-core==1.2.0
       - identify==2.5.1
       - importlib-metadata==4.11.4
       - iniconfig==1.1.1
