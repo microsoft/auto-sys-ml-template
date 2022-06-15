@@ -1,14 +1,11 @@
-# Docker
-# Build and push an image to Azure Container Registry
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
-  branches:
-    include:
-      - master
-  paths:
-    include:
-      - docker
+  - master
+  # paths:
+  #   include:
+  #     - docker
+
+pr:
+  - master
 
 resources:
   - repo: self
@@ -18,28 +15,54 @@ variables:
   dockerRegistryServiceConnection: "442ea973-c852-4792-aa09-fab4a9df791f"
   imageRepository: "ml_template"
   containerRegistry: "commondockerimages.azurecr.io"
-  dockerfilePath: "$(Build.SourcesDirectory)/docker/Dockerfile"
-  tag: "$(Build.SourceBranchName)_$(Build.BuildNumber)"
+  dockerfilenvidiaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_nvidia"
+  dockerfilecondaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_conda"
+  tagDate: "$(Build.SourceBranchName)_$(Build.BuildNumber)"
+  tagConda: "latest-nvidia"
+  tagNvidia: "latest-conda"
+  tagLatest: "latest"
 
   # Agent VM image name
   vmImageName: "ubuntu-latest"
 
+  # docker image names for pytest
+  docker_base_azureml: $(containerRegistry)/$(imageRepository):$(tag_conda)
+  docker_base_nvidia: $(containerRegistry)/$(imageRepository):$(tag_nvidia)
+
 stages:
-  - stage: Build
-    displayName: Build and push stage
+  # docs: https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+  - stage: BuildDockerImages
+    displayName: docker build and run tests
     jobs:
-      - job: BuildDockerImageAndPush
-        displayName: Build And Push Docker Image to ACR
+      - job: BuildDockerNvidiaBasePipInstall
+        displayName: nvidia base and pip install
         pool:
           vmImage: $(vmImageName)
         steps:
           - task: Docker@2
-            displayName: Build and push an image to container registry
+            displayName: build and push image
             inputs:
               command: buildAndPush
               repository: $(imageRepository)
-              dockerfile: $(dockerfilePath)
+              dockerfile: $(dockerfilenvidiaPath)
               containerRegistry: $(dockerRegistryServiceConnection)
               tags: |
-                $(tag)
-                latest
+                $(tagDate)
+                $(tagNvidia)
+
+      - job: BuildDockerAzureMLBaseAndConda
+        displayName: azureml base and conda env
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - task: Docker@2
+            displayName: build and push image
+            inputs:
+              command: buildAndPush
+              repository: $(imageRepository)
+              dockerfile: $(dockerfilecondaPath)
+              containerRegistry: $(dockerRegistryServiceConnection)
+              tags: |
+                $(tagDate)-conda
+                $(tagConda)
+                $(tagLatest)
