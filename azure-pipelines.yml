@@ -1,11 +1,11 @@
 trigger:
-  - master
+  - main
   # paths:
   #   include:
   #     - docker
 
 pr:
-  - master
+  - main
 
 resources:
   - repo: self
@@ -50,7 +50,7 @@ stages:
               ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
                 tags: |
                   $(tagCurrentNvidia)
-              ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+              ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
                 tags: |
                   $(tagCurrentNvidia)
                   $(tagLatestNvidia)
@@ -78,7 +78,7 @@ stages:
               ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
                 tags: |
                   $(tagCurrentConda)
-              ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+              ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
                 tags: |
                   $(tagCurrentConda)
                   $(tagLatestConda)
