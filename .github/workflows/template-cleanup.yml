@@ -1,0 +1,46 @@
+# credits: https://github.com/JetBrains/intellij-platform-plugin-template/blob/main/.github/workflows/template-cleanup.yml
+
+# GitHub Actions Workflow responsible for cleaning up the Autonomous Research Systems' ml_template repository from
+# the template-specific files and configurations. This workflow is supposed to be triggered automatically
+# when a new template-based repository has been created.
+
+name: Template Cleanup
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Run cleaning process only if workflow is triggered by the ml_template repository.
+  template-cleanup:
+    name: Template Cleanup
+    runs-on: ubuntu-latest
+    if: github.event.repository.name != 'ml_template'
+    steps:
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v2.4.0
+
+      # Cleanup project
+      - name: Cleanup
+        run: |
+          rm -r assets/
+          mv README_template.md README.md
+          rm .github/workflows/template-cleanup.yml
+
+      # Commit modified files
+      - name: Commit files
+        run: |
+          git config --local user.email "ratneshmadaan@gmail.com"
+          git config --local user.name "madratman"
+          git add .
+          git commit -m "bla"
+          git reset $(git commit-tree HEAD^{tree} -m "microsoft/AutonomousSystemsResearchGroup: init ml template repo")
+
+      # Push changes
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          branch: main
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          force: true
