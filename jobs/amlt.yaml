@@ -32,6 +32,7 @@ jobs:
     submit_args:
       container_args:
         shm_size: 650g
+      env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
       - python src/train.py -c configs/train.yaml --trainer.gpus=1 --trainer.max_epochs=50
 
@@ -42,6 +43,7 @@ jobs:
     submit_args:
       container_args:
         shm_size: 650g
+      env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
       - python src/train.py -c configs/train.yaml --trainer.gpus=4 --trainer.max_epochs=50
 
@@ -52,6 +54,7 @@ jobs:
     submit_args:
       container_args:
         shm_size: 650g
+      env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
       - python src/train.py -c configs/train.yaml --trainer.num_nodes=2 --trainer.gpus=4 --trainer.max_epochs=50
 
@@ -66,5 +69,9 @@ jobs:
     submit_args:
       container_args:
         shm_size: 650g
+      env:
+        { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
+        # {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True, NCCL_DEBUG: INFO, NCCL_DEBUG_SUBSYS: ALL} # for debugging
+
     command:
       - python src/train.py -c configs/train.yaml --trainer.num_nodes=${NUM_NODES} --trainer.gpus=${NUM_GPUS} --trainer.max_epochs=50

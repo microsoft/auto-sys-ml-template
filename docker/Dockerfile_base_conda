@@ -1,8 +1,10 @@
-# azureml base images: https://hub.docker.com/_/microsoft-azureml?tab=description
+# see latest azureml base images tags here
+# - https://github.com/Azure/AzureML-Containers/tree/master/base/gpu
+# - https://hub.docker.com/_/microsoft-azureml?tab=description
 
-ARG BASE_IMAGE=mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.1-cudnn8-ubuntu18.04:latest
+ARG BASE_IMAGE=openmpi4.1.0-cuda11.3-cudnn8-ubuntu20.04:latest
 
-FROM ${BASE_IMAGE}
+FROM mcr.microsoft.com/azureml/${BASE_IMAGE}
 
 ARG DEBIAN_FRONTEND=noninteractive
 
