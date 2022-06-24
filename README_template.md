@@ -15,19 +15,17 @@
   (NAMEOFYOURPROJECT) $ pip install -e .
   ```
 
-- Using [docker](https://docs.docker.com/engine/install/ubuntu/)
-
-  Note: Please review [Developing inside Docker Container inside Remote Linux VM](https://bizair.visualstudio.com/Research/_wiki/wikis/Research.wiki/975/Developing-inside-docker-containers-inside-remote-linux-vm).
+- Using docker
 
   ```
   # pull image with [azureml image](https://hub.docker.com/_/microsoft-azureml?tab=description) as base with docker/environment.yml on top
-  docker pull commondockerimages.azurecr.io/NAMEOFYOURPROJECT:latest
+  docker pull NAMEOFYOURPROJECT:latest
 
   # pull image with nvidia pytorch image as base
-  # docker pull commondockerimages.azurecr.io/NAMEOFYOURPROJECT:latest-nvidia (for nvidia pytorch base image. See the note below for more details.)
+  # docker pull NAMEOFYOURPROJECT:latest-nvidia
 
   # run image
-  docker run -it --gpus=all -v <PATH_TO_THIS_REPO>:<PATH_TO_THIS_REPO> commondockerimages.azurecr.io/NAMEOFYOURPROJECT:latest
+  docker run -it --gpus=all -v <PATH_TO_THIS_REPO>:<NAMEOFYOURPROJECT:latest
 
   # setup the repo (run inside the container)
   pip install -e .
