@@ -9,9 +9,11 @@
         // "dockerfile": "../docker/Dockerfile_base_nvidia",
         "args": {
             // Edit docker build args here as appropriate
+            // find latest BASE_IMAGE for Dockerfile_base_conda at https://github.com/Azure/AzureML-Containers/tree/master/base/gpu
             "BASE_IMAGE": "openmpi4.1.0-cuda11.3-cudnn8-ubuntu20.04:latest"
-            // Uncomment the "YEAR_MONTH" for nvidia base image (and comment out "BASE_IMAGE")
-            // "YEAR_MONTH": "22.04"
+            // find latest BASE_IMAGE for Dockerfile_base_nvidia at https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch/tags
+            // Uncomment the following for nvidia base image
+            // "BASE_IMAGE": "22.04-py3"
         },
     },
     // Configure tool-specific properties.
