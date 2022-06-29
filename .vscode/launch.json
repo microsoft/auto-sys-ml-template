@@ -13,15 +13,19 @@
             "justMyCode": true
         },
         {
-            "name": "train_cli.py",
+            "name": "train.py",
             "type": "python",
             "request": "launch",
-            "program": "src/train_cli.py",
+            "program": "src/train.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
                 "--config",
-                "configs/train.yaml"
+                "configs/train.yaml",
+                "--trainer.num_nodes",
+                "1",
+                "--trainer.gpus",
+                "1"
             ]
         }
     ]
