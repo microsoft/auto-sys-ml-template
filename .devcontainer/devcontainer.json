@@ -1,0 +1,61 @@
+// Remote devcontainer file that describes what container to build, how to build it,
+// and the extensions VS Code needs to enable the best remote development experience
+{
+    "name": "devcontainer",
+    "build": {
+        "context": "../docker",
+        // Uncomment the base dockerfile of your choice
+        "dockerfile": "../docker/Dockerfile_base_conda",
+        // "dockerfile": "../docker/Dockerfile_base_nvidia",
+        "args": {
+            // Edit docker build args here as appropriate
+            "BASE_IMAGE": "openmpi4.1.0-cuda11.3-cudnn8-ubuntu20.04:latest"
+            // Uncomment the "YEAR_MONTH" for nvidia base image (and comment out "BASE_IMAGE")
+            // "YEAR_MONTH": "22.04"
+        },
+    },
+    // Configure tool-specific properties.
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+            // Add the IDs of extensions you want installed when the container is created.
+            "extensions": [
+                "eamodio.gitlens",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-azuretools.vscode-docker",
+                "ms-vscode-remote.remote-containers",
+                "ms-vscode-remote.remote-ssh",
+                "ms-vscode-remote.remote-ssh-edit",
+                "ms-vscode-remote.remote-wsl",
+                "ms-vscode-remote.vscode-remote-extensionpack",
+                "redhat.vscode-yaml",
+                "yzhang.markdown-all-in-one",
+                "TrungNgo.autoflake",
+                "Shan.code-settings-sync",
+                "njpwerner.autodocstring",
+                "jbockle.jbockle-format-files"
+            ]
+        }
+    },
+    // Docker run args
+    "runArgs": [
+        // Run with GPU support
+        "--privileged",
+        "--gpus",
+        "all",
+        // Uncomment the next line if you will be using a ptrace-based debugger like C++, Go, and Rust.
+        "--cap-add=SYS_PTRACE",
+        "--security-opt",
+        "seccomp=unconfined",
+        // Use Docker from inside the container. See https://aka.ms/vscode-remote/samples/docker-in-docker for details.
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock"
+    ],
+    // Run the following command after the container has started and workspace mounted
+    "postStartCommand": "conda env config vars set -n base PYTHONPATH=${containerWorkspaceFolder} && git config --global --add safe.directory ${containerWorkspaceFolder}"
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+    // Use 'postCreateCommand' to run commands after the container is created.
+    // "postCreateCommand": "python --version"
+}
