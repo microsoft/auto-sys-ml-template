@@ -13,15 +13,18 @@ resources:
 variables:
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: "442ea973-c852-4792-aa09-fab4a9df791f"
+
   imageRepository: "ml_template"
   containerRegistry: "commondockerimages.azurecr.io"
-  dockerfilenvidiaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_nvidia"
+
   dockerfilecondaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_conda"
-  tagCurrentNvidia: "$(Build.SourceBranchName)_$(Build.BuildNumber)-nvidia"
   tagCurrentConda: "$(Build.SourceBranchName)_$(Build.BuildNumber)-conda"
-  tagLatestConda: "latest-nvidia"
-  tagLatestNvidia: "latest-conda"
+  tagLatestConda: "latest-conda"
   tagLatest: "latest"
+
+  dockerfilenvidiaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_nvidia"
+  tagCurrentNvidia: "$(Build.SourceBranchName)_$(Build.BuildNumber)-nvidia"
+  tagLatestNvidia: "latest-nvidia"
 
   # Agent VM image name
   vmImageName: "ubuntu-latest"
