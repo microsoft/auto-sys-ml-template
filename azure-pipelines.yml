@@ -14,52 +14,121 @@ variables:
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: "442ea973-c852-4792-aa09-fab4a9df791f"
 
-  imageRepository: "ml_template"
   containerRegistry: "commondockerimages.azurecr.io"
 
   dockerfilecondaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_conda"
-  tagCurrentConda: "$(Build.SourceBranchName)_$(Build.BuildNumber)-conda"
-  tagLatestConda: "latest-conda"
   tagLatest: "latest"
 
   dockerfilenvidiaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_nvidia"
-  tagCurrentNvidia: "$(Build.SourceBranchName)_$(Build.BuildNumber)-nvidia"
-  tagLatestNvidia: "latest-nvidia"
 
   # Agent VM image name
   vmImageName: "ubuntu-latest"
-
-  # docker image names for pytest
-  docker_base_azureml: $(containerRegistry)/$(imageRepository):$(tag_conda)
-  docker_base_nvidia: $(containerRegistry)/$(imageRepository):$(tag_nvidia)
 
 stages:
   # docs: https://docs.microsoft.com/azure/devops/pipelines/languages/docker
   - stage: BuildDockerImagesAndRunPytest
     displayName: Build docker; run pytests on built images
     jobs:
-      - job: BuildDockerNvidiaBasePipInstall
-        displayName: docker build nvidia base; run pytest
+      - job: DefineDockerTags
+        displayName: define docker tags
         pool:
           vmImage: $(vmImageName)
         steps:
+          - bash: |
+              github_organization_prefix="AutonomousSystemsResearch/"
+              full_repo_name=$(Build.Repository.Name)
+              repo_name=${full_repo_name#"$github_organization_prefix"}
+              branch_name=$(Build.SourceBranchName)
+
+              git_short_hash_main=`git rev-parse --short=7 HEAD`
+              git_hash_pr=$(System.PullRequest.SourceCommitId)
+              git_short_hash_pr=${git_hash_pr:0:7}
+              pr_number=$(System.PullRequest.PullRequestNumber)
+
+              tag_main_git_commit=main-$git_short_hash_main
+              tag_pr_git_commit=PR-$pr_number-$git_short_hash_pr
+              tag_pr_latest=PR-$pr_number-latest
+
+              echo ""
+              echo "full repo name:  $(Build.Repository.Name)"
+              echo "repo name:  $repo_name"
+              echo "Build Id:  $(Build.BuildId)"
+              echo "Build BuildNumber:  $(Build.BuildNumber)"
+              echo "Build Reason:  $(Build.Reason)"
+              echo "Build Branch Name:  $(Build.SourceBranchName)"
+              echo "git commit message: $(Build.SourceVersionMessage)"
+              echo "git hash (main branch):  $(Build.SourceVersion)"
+              echo "git hash short (main branch): $git_short_hash_main"
+              echo "PR branch: $(System.PullRequest.SourceBranch)"
+              echo "PR number: $(System.PullRequest.PullRequestNumber)"
+              echo "PR ID: $(System.PullRequest.PullRequestId)"
+              echo "git hash (PR branch): $(System.PullRequest.SourceCommitId)"
+              echo "git hash short (PR branch): : $git_short_hash_pr"
+
+              # set pipeline variables which can be referenced in the jobs that follow to tag docker images appropriately
+              echo "##vso[task.setvariable variable=repoName;isoutput=true]$repo_name"
+              echo "##vso[task.setvariable variable=tagPRLatest;isoutput=true]$tag_pr_latest"
+
+              if [[ "$branch_name" == "main" ]]; then
+                echo "##vso[task.setvariable variable=tagOfThisBuild;isoutput=true]$tag_main_git_commit"
+              fi
+              if [[ "$branch_name" == "merge" ]]; then
+                echo "##vso[task.setvariable variable=tagOfThisBuild;isoutput=true]$tag_pr_git_commit"
+              fi
+
+              ## deprecated; but might be of use in the future
+              # echo "##vso[task.setvariable variable=tagMainGitCommitHash;isoutput=true]$tag_main_git_commit"
+              # echo "##vso[task.setvariable variable=tagPRGitCommitHash;isoutput=true]$tag_pr_git_commit"
+
+              # print tags:
+              echo "tag_pr_latest:  $tag_pr_latest"
+              echo "tag_pr_git_commit:  $tag_pr_git_commit"
+              echo "tag_main_git_commit:  $tag_main_git_commit"
+
+              # print outputvars:
+              echo "tag_pr_latest:  $tag_pr_latest"
+              echo "tag_pr_git_commit:  $tag_pr_git_commit"
+              echo "tag_main_git_commit:  $tag_main_git_commit"
+            name: DockerTagVars # because we're going to depend on it, we need to name the step
+            displayName: (debug) print git info
+
+      - job: BuildDockerNvidiaBasePipInstall
+        dependsOn: DefineDockerTags
+        displayName: docker build nvidia base; run pytest
+        pool:
+          vmImage: $(vmImageName)
+        variables:
+          tagOfThisBuild: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagOfThisBuild'] ]
+          tagPRLatest: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagPRLatest'] ]
+          repoName: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.repoName'] ]
+        steps:
+          - bash: |
+              echo "repoName: $(repoName)"
+              echo "tagOfThisBuild: $(tagOfThisBuild)"
+              echo "tagPRLatest: $(tagPRLatest)"
+
+              # echo "tagMainGitCommitHash: $(tagMainGitCommitHash)"
+              # echo "tagPRGitCommitHash: $(tagPRGitCommitHash)"
+            displayName: (debug) print pipeline vars
+
           - task: Docker@2
             displayName: Build and Push Image
             inputs:
               command: buildAndPush
-              repository: $(imageRepository)
+              repository: $(repoName)
               dockerfile: $(dockerfilenvidiaPath)
               containerRegistry: $(dockerRegistryServiceConnection)
               ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
                 tags: |
-                  $(tagCurrentNvidia)
+                  $(tagOfThisBuild)-nvidia
+                  $(tagPRLatest)-nvidia
               ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
                 tags: |
-                  $(tagCurrentNvidia)
-                  $(tagLatestNvidia)
+                  $(tagOfThisBuild)-nvidia
+                  $(tagLatest)-nvidia
 
           - bash: |
-              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagCurrentNvidia)
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(repoName):$(tagOfThisBuild)-nvidia
             displayName: Run docker container
 
           - script: |
@@ -67,28 +136,41 @@ stages:
             displayName: Run Pytest on Current Build
 
       - job: BuildDockerAzureMLBaseAndConda
+        dependsOn: DefineDockerTags
         displayName: docker build azureml base; run pytest
         pool:
           vmImage: $(vmImageName)
+        variables:
+          tagOfThisBuild: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagOfThisBuild'] ]
+          tagPRLatest: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagPRLatest'] ]
+          repoName: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.repoName'] ]
         steps:
+          - bash: |
+              echo "repoName: $(repoName)"
+              echo "tagOfThisBuild: $(tagOfThisBuild)"
+              echo "tagPRLatest: $(tagPRLatest)"
+            displayName: (debug) print pipeline vars
+
           - task: Docker@2
             displayName: Build and Push Image
             inputs:
               command: buildAndPush
-              repository: $(imageRepository)
+              repository: $(repoName)
               dockerfile: $(dockerfilecondaPath)
               containerRegistry: $(dockerRegistryServiceConnection)
               ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
                 tags: |
-                  $(tagCurrentConda)
+                  $(tagOfThisBuild)-conda
+                  $(tagPRLatest)-conda
+                  $(tagPRLatest)
               ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
                 tags: |
-                  $(tagCurrentConda)
-                  $(tagLatestConda)
+                  $(tagOfThisBuild)-conda
+                  $(tagLatest)-conda
                   $(tagLatest)
 
           - bash: |
-              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagCurrentConda)
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(repoName):$(tagOfThisBuild)-conda
             displayName: Run docker container
 
           - script: |
@@ -96,9 +178,12 @@ stages:
             displayName: Run Pytest on Current Build
 
       - job: NvidiaBaseTagLatestPytest
+        dependsOn: DefineDockerTags
         displayName: run pytest latest-nvidia
         pool:
           vmImage: $(vmImageName)
+        variables:
+          repoName: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.repoName'] ]
         steps:
           - checkout: self
 
@@ -109,7 +194,7 @@ stages:
               containerRegistry: $(dockerRegistryServiceConnection)
 
           - script: |
-              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagLatestNvidia)
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(repoName):$(tagLatest)-nvidia
             displayName: docker pull and run
 
           - script: |
@@ -117,9 +202,12 @@ stages:
             displayName: Run Pytest on Latest Tag
 
       - job: AzureMLCondaBaseTagLatestPytest
+        dependsOn: DefineDockerTags
         displayName: run pytest latest-conda
         pool:
           vmImage: $(vmImageName)
+        variables:
+          repoName: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.repoName'] ]
         steps:
           - checkout: self
 
@@ -130,7 +218,7 @@ stages:
               containerRegistry: $(dockerRegistryServiceConnection)
 
           - script: |
-              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(imageRepository):$(tagLatestConda)
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(repoName):$(tagLatest)-conda
             displayName: docker pull and run
 
           - script: |

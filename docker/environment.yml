@@ -1,6 +1,7 @@
 name: ml_template
 channels:
   - pytorch
+  - conda-forge
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
@@ -8,12 +9,12 @@ dependencies:
   - blas=1.0=mkl
   - brotlipy=0.7.0=py38h27cfd23_1003
   - bzip2=1.0.8=h7b6447c_0
-  - ca-certificates=2022.4.26=h06a4308_0
-  - certifi=2022.5.18.1=py38h06a4308_0
+  - ca-certificates=2022.6.15=ha878542_0
+  - certifi=2022.6.15=py38h578d9bd_0
   - cffi=1.15.0=py38hd667e15_1
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
   - cryptography=37.0.1=py38h9ce1e76_0
-  - cudatoolkit=11.3.1=h2bc3f7f_2
+  - cudatoolkit=11.6.0=hecad31d_10
   - ffmpeg=4.2.2=h20bf706_0
   - freetype=2.11.0=h70c0345_0
   - giflib=5.2.1=h7b6447c_0
@@ -49,14 +50,14 @@ dependencies:
   - numpy=1.22.3=py38he7a7128_0
   - numpy-base=1.22.3=py38hf524024_0
   - openh264=2.1.1=h4ff587b_0
-  - openssl=1.1.1o=h7f8727e_0
+  - openssl=1.1.1o=h166bdaf_0
   - pillow=9.0.1=py38h22f2fdc_0
   - pip=21.2.4=py38h06a4308_0
   - pycparser=2.21=pyhd3eb1b0_0
   - pyopenssl=22.0.0=pyhd3eb1b0_0
   - pysocks=1.7.1=py38h06a4308_0
   - python=3.8.13=h12debd9_0
-  - pytorch=1.11.0=py3.8_cuda11.3_cudnn8.2.0_0
+  - python_abi=3.8=2_cp38
   - pytorch-mutex=1.0=cuda
   - readline=8.1.2=h7f8727e_1
   - requests=2.27.1=pyhd3eb1b0_0
@@ -64,8 +65,8 @@ dependencies:
   - six=1.16.0=pyhd3eb1b0_1
   - sqlite=3.38.3=hc218d9a_0
   - tk=8.6.12=h1ccaba5_0
-  - torchaudio=0.11.0=py38_cu113
-  - torchvision=0.12.0=py38_cu113
+  - torchaudio=0.12.0=py38_cu116
+  - torchvision=0.13.0=py38_cu116
   - typing_extensions=4.1.1=pyh06a4308_0
   - urllib3=1.26.9=py38h06a4308_0
   - wheel=0.37.1=pyhd3eb1b0_0
@@ -77,39 +78,66 @@ dependencies:
       - absl-py==1.1.0
       - aiohttp==3.8.1
       - aiosignal==1.2.0
+      - ale-py==0.7.5
       - antlr4-python3-runtime==4.9.3
+      - astunparse==1.6.3
       - async-timeout==4.0.2
+      - atari-py==0.2.9
       - attrs==21.4.0
       - black==22.3.0
       - cachetools==5.2.0
       - cfgv==3.3.1
+      - chex==0.1.3
+      - colorama==0.4.5
       - cycler==0.11.0
       - distlib==0.3.4
+      - dm-tree==0.1.7
       - docstring-parser==0.14.1
+      - dopamine-rl==4.0.5
+      - etils==0.6.0
       - filelock==3.7.1
       - flake8==4.0.1
+      - flatbuffers==1.12
+      - flax==0.5.2
       - fonttools==4.33.3
       - frozenlist==1.3.0
       - fsspec==2022.5.0
+      - gast==0.4.0
       - gcsfs==2022.5.0
+      - gin-config==0.5.0
+      - google-api-core==2.8.2
       - google-auth==2.7.0
       - google-auth-oauthlib==0.4.6
+      - google-pasta==0.2.0
+      - googleapis-common-protos==1.56.4
       - grpcio==1.46.3
+      - gym==0.24.1
+      - gym-notices==0.0.7
+      - h5py==3.7.0
       - hydra-core==1.2.0
       - identify==2.5.1
       - importlib-metadata==4.11.4
       - iniconfig==1.1.1
       - isort==5.10.1
+      - jax==0.3.14
+      - jaxlib==0.3.14
       - jsonargparse==4.9.0
+      - keras==2.9.0
+      - keras-preprocessing==1.1.2
       - kiwisolver==1.4.3
+      - libclang==14.0.1
       - markdown==3.3.7
       - matplotlib==3.5.2
       - mccabe==0.6.1
+      - msgpack==1.0.4
       - multidict==6.0.2
       - mypy-extensions==0.4.3
       - nodeenv==1.6.0
       - oauthlib==3.2.0
       - omegaconf==2.2.2
+      - opencv-python==4.6.0.66
+      - opt-einsum==3.3.0
+      - optax==0.1.2
       - packaging==21.3
       - pathspec==0.9.0
       - platformdirs==2.5.2
@@ -122,23 +150,34 @@ dependencies:
       - pycodestyle==2.8.0
       - pydeprecate==0.3.2
       - pyflakes==2.4.0
+      - pygame==2.1.2
       - pyparsing==3.0.9
       - pytest==7.1.2
       - python-dateutil==2.8.2
-      - pytorch-lightning==1.6.4
+      - pytorch-lightning==1.6.5
       - pyyaml==6.0
       - requests-oauthlib==1.3.1
-      - rich==12.4.1
+      - rich==11.2.0
       - rsa==4.8
+      - scipy==1.8.1
       - sh==1.14.2
       - tensorboard==2.9.1
       - tensorboard-data-server==0.6.1
       - tensorboard-plugin-wit==1.8.1
+      - tensorflow==2.9.1
+      - tensorflow-estimator==2.9.0
+      - tensorflow-io-gcs-filesystem==0.26.0
+      - tensorflow-probability==0.17.0
+      - termcolor==1.1.0
+      - tf-slim==1.1.0
       - toml==0.10.2
       - tomli==2.0.1
+      - toolz==0.12.0
+      - torch==1.11.0
       - torchmetrics==0.9.1
       - tqdm==4.64.0
       - virtualenv==20.14.1
       - werkzeug==2.1.2
+      - wrapt==1.14.1
       - yarl==1.7.2
       - zipp==3.8.0
