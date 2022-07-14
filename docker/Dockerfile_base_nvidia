@@ -1,6 +1,7 @@
+# tags release notes: https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/index.html
 # tags: https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch/tags?quick-deploy=false
 
-ARG BASE_IMAGE=22.04-py3
+ARG BASE_IMAGE=22.06-py3
 
 FROM nvcr.io/nvidia/pytorch:${BASE_IMAGE}
 

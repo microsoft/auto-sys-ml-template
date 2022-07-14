@@ -4,10 +4,14 @@
 
 description: ML Template Experiment - MNIST
 
+# commondockerimages.azurecr.io:
+# https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/964a24a8-8835-43c1-9633-7d78841facf1/resourceGroups/research_team/providers/Microsoft.ContainerRegistry/registries/commondockerimages/repository
 environment:
   registry: commondockerimages.azurecr.io
   username: commondockerimages
   image: ml_template:latest
+  # image: ml_template:latest-nvidia # see docker/Dockerfile_base_nvidia
+  # image: ml_template:PR-49-latest # test a PR's CI build before merging your code to main
   setup:
     - pip install -e .
 
