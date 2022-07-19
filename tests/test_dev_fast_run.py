@@ -1,4 +1,4 @@
-import pytest
+import pytest  # nopycln: import
 from helpers import run_command
 
 
