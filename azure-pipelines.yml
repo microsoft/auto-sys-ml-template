@@ -11,15 +11,18 @@ resources:
   - repo: self
 
 variables:
+  # Note: to customize the pipeline to use private ACRs other than commondockerimages,
+  # you need to change BOTH dockerRegistryServiceConnection and containerRegistryName
+
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: "442ea973-c852-4792-aa09-fab4a9df791f"
+  containerRegistryName: "commondockerimages.azurecr.io"
 
-  containerRegistry: "commondockerimages.azurecr.io"
-
-  dockerfilecondaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_conda"
-  tagLatest: "latest"
-
+  dockerfileazuremlPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_azureml"
+  dockerfileazuremlnightlyPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_azureml_nightly"
   dockerfilenvidiaPath: "$(Build.SourcesDirectory)/docker/Dockerfile_base_nvidia"
+
+  tagLatest: "latest"
 
   # Agent VM image name
   vmImageName: "ubuntu-latest"
@@ -92,9 +95,9 @@ stages:
             name: DockerTagVars # because we're going to depend on it, we need to name the step
             displayName: (debug) print git info
 
-      - job: BuildDockerNvidiaBasePipInstall
+      - job: BuildDockerAzureMLBase
         dependsOn: DefineDockerTags
-        displayName: docker build nvidia base; run pytest
+        displayName: build azureml; run pytest
         pool:
           vmImage: $(vmImageName)
         variables:
@@ -106,6 +109,94 @@ stages:
               echo "repoName: $(repoName)"
               echo "tagOfThisBuild: $(tagOfThisBuild)"
               echo "tagPRLatest: $(tagPRLatest)"
+            displayName: (debug) print pipeline vars
+
+          - task: Docker@2
+            displayName: Build and Push Image
+            inputs:
+              command: buildAndPush
+              repository: $(repoName)
+              dockerfile: $(dockerfileazuremlPath)
+              containerRegistry: $(dockerRegistryServiceConnection)
+              ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
+                tags: |
+                  $(tagOfThisBuild)-azureml
+                  $(tagPRLatest)-azureml
+                  $(tagPRLatest)
+              ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+                tags: |
+                  $(tagOfThisBuild)-azureml
+                  $(tagLatest)-azureml
+                  $(tagLatest)
+
+          - bash: |
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistryName)/$(repoName):$(tagOfThisBuild)-azureml
+              docker exec testapp bash -c "python3 -c \"import torch; print('torch: version', torch.__version__)\""
+              docker exec testapp bash -c "python3 -c \"import pytorch_lightning; print('pytorch_lightning: version', pytorch_lightning.__version__)\""
+              docker exec testapp bash -c "python3 -c \"import torch; print('torch.cuda.version:', torch.version.cuda)\""
+            displayName: print versions
+
+          - script: |
+              docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
+            displayName: pytest
+
+      - job: BuildDockerAzureMLBaseNightly
+        dependsOn: DefineDockerTags
+        displayName: build azureml nightly; run pytest
+        pool:
+          vmImage: $(vmImageName)
+        variables:
+          tagOfThisBuild: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagOfThisBuild'] ]
+          tagPRLatest: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagPRLatest'] ]
+          repoName: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.repoName'] ]
+        steps:
+          - bash: |
+              echo "repoName: $(repoName)"
+              echo "tagOfThisBuild: $(tagOfThisBuild)-azureml-nightly"
+              echo "tagPRLatest: $(tagPRLatest)-azureml-nightly"
+            displayName: (debug) print pipeline vars
+
+          - task: Docker@2
+            displayName: Build and Push Image
+            inputs:
+              command: buildAndPush
+              repository: $(repoName)
+              dockerfile: $(dockerfileazuremlnightlyPath)
+              containerRegistry: $(dockerRegistryServiceConnection)
+              ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
+                tags: |
+                  $(tagOfThisBuild)-azureml-nightly
+                  $(tagPRLatest)-azureml-nightly
+              ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+                tags: |
+                  $(tagOfThisBuild)-azureml-nightly
+                  $(tagLatest)-azureml-nightly
+
+          - bash: |
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistryName)/$(repoName):$(tagOfThisBuild)-azureml-nightly
+              docker exec testapp bash -c "python3 -c \"import torch; print('torch: version', torch.__version__)\""
+              docker exec testapp bash -c "python3 -c \"import pytorch_lightning; print('pytorch_lightning: version', pytorch_lightning.__version__)\""
+              docker exec testapp bash -c "python3 -c \"import torch; print('torch.cuda.version:', torch.version.cuda)\""
+            displayName: print versions
+
+          - script: |
+              docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
+            displayName: pytest
+
+      - job: BuildDockerNvidiaBasePipInstall
+        dependsOn: DefineDockerTags
+        displayName: build nvidia pytorch; run pytest
+        pool:
+          vmImage: $(vmImageName)
+        variables:
+          tagOfThisBuild: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagOfThisBuild'] ]
+          tagPRLatest: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagPRLatest'] ]
+          repoName: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.repoName'] ]
+        steps:
+          - bash: |
+              echo "repoName: $(repoName)"
+              echo "tagOfThisBuild: $(tagOfThisBuild)-nvidia"
+              echo "tagPRLatest: $(tagPRLatest)-nvidia"
 
               # echo "tagMainGitCommitHash: $(tagMainGitCommitHash)"
               # echo "tagPRGitCommitHash: $(tagPRGitCommitHash)"
@@ -128,58 +219,19 @@ stages:
                   $(tagLatest)-nvidia
 
           - bash: |
-              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(repoName):$(tagOfThisBuild)-nvidia
-            displayName: Run docker container
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistryName)/$(repoName):$(tagOfThisBuild)-nvidia
+              docker exec testapp bash -c "python3 -c \"import torch; print('torch: version', torch.__version__)\""
+              docker exec testapp bash -c "python3 -c \"import pytorch_lightning; print('pytorch_lightning: version', pytorch_lightning.__version__)\""
+              docker exec testapp bash -c "python3 -c \"import torch; print('torch.cuda.version:', torch.version.cuda)\""
+            displayName: print versions
 
           - script: |
               docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
-            displayName: Run Pytest on Current Build
+            displayName: pytest
 
-      - job: BuildDockerAzureMLBaseAndConda
+      - job: PytestAzureMLBaseTagLatest
         dependsOn: DefineDockerTags
-        displayName: docker build azureml base; run pytest
-        pool:
-          vmImage: $(vmImageName)
-        variables:
-          tagOfThisBuild: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagOfThisBuild'] ]
-          tagPRLatest: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.tagPRLatest'] ]
-          repoName: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.repoName'] ]
-        steps:
-          - bash: |
-              echo "repoName: $(repoName)"
-              echo "tagOfThisBuild: $(tagOfThisBuild)"
-              echo "tagPRLatest: $(tagPRLatest)"
-            displayName: (debug) print pipeline vars
-
-          - task: Docker@2
-            displayName: Build and Push Image
-            inputs:
-              command: buildAndPush
-              repository: $(repoName)
-              dockerfile: $(dockerfilecondaPath)
-              containerRegistry: $(dockerRegistryServiceConnection)
-              ${{ if eq(variables['Build.SourceBranchName'], 'merge') }}:
-                tags: |
-                  $(tagOfThisBuild)-conda
-                  $(tagPRLatest)-conda
-                  $(tagPRLatest)
-              ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
-                tags: |
-                  $(tagOfThisBuild)-conda
-                  $(tagLatest)-conda
-                  $(tagLatest)
-
-          - bash: |
-              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(repoName):$(tagOfThisBuild)-conda
-            displayName: Run docker container
-
-          - script: |
-              docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
-            displayName: Run Pytest on Current Build
-
-      - job: NvidiaBaseTagLatestPytest
-        dependsOn: DefineDockerTags
-        displayName: run pytest latest-nvidia
+        displayName: pytest latest-azureml
         pool:
           vmImage: $(vmImageName)
         variables:
@@ -194,16 +246,16 @@ stages:
               containerRegistry: $(dockerRegistryServiceConnection)
 
           - script: |
-              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(repoName):$(tagLatest)-nvidia
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistryName)/$(repoName):$(tagLatest)-azureml
             displayName: docker pull and run
 
           - script: |
               docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
-            displayName: Run Pytest on Latest Tag
+            displayName: pytest
 
-      - job: AzureMLCondaBaseTagLatestPytest
+      - job: PytestAzureMLBaseTagLatestNightly
         dependsOn: DefineDockerTags
-        displayName: run pytest latest-conda
+        displayName: pytest latest-azureml-nightly
         pool:
           vmImage: $(vmImageName)
         variables:
@@ -218,9 +270,33 @@ stages:
               containerRegistry: $(dockerRegistryServiceConnection)
 
           - script: |
-              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistry)/$(repoName):$(tagLatest)-conda
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistryName)/$(repoName):$(tagLatest)-azureml-nightly
             displayName: docker pull and run
 
           - script: |
               docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
-            displayName: Run Pytest on Latest Tag
+            displayName: pytest
+
+      - job: PytestNvidiaBaseTagLatest
+        dependsOn: DefineDockerTags
+        displayName: pytest latest-nvidia
+        pool:
+          vmImage: $(vmImageName)
+        variables:
+          repoName: $[ dependencies.DefineDockerTags.outputs['DockerTagVars.repoName'] ]
+        steps:
+          - checkout: self
+
+          - task: Docker@2
+            displayName: Login to ACR
+            inputs:
+              command: login
+              containerRegistry: $(dockerRegistryServiceConnection)
+
+          - script: |
+              docker run -d -i --name testapp -v $(Build.SourcesDirectory):/workdir -w /workdir $(containerRegistryName)/$(repoName):$(tagLatest)-nvidia
+            displayName: docker pull and run
+
+          - script: |
+              docker exec testapp bash -c "pip install -e .; pytest tests/test_dev_fast_run.py -k test_fast_dev_run_cpu"
+            displayName: pytest
