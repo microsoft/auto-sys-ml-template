@@ -166,6 +166,7 @@ dependencies:
       - pre-commit==2.20.0
       - prometheus-flask-exporter==0.20.2
       - protobuf==3.19.4
+      - psutil==5.9.0
       - py==1.11.0
       - pyasn1==0.4.8
       - pyasn1-modules==0.2.8

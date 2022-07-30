@@ -9,9 +9,10 @@ description: ML Template Experiment - MNIST
 environment:
   registry: commondockerimages.azurecr.io
   username: commondockerimages
-  image: ml_template:latest
+  image: ml_template:latest # same as latest-azureml # see docker/Dockerfile_base_azureml
+  # image: ml_template:latest-azureml-nightly # see docker/Dockerfile_base_azureml_nightly
   # image: ml_template:latest-nvidia # see docker/Dockerfile_base_nvidia
-  # image: ml_template:PR-49-latest # test a PR's CI build before merging your code to main
+  # image: ml_template:PR-51-latest # test a PR's CI build before merging your code to main
   setup:
     - pip install -e .
 
@@ -38,6 +39,8 @@ jobs:
         shm_size: 650g
       env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
+      - export MKL_THREADING_LAYER="GNU"
+      - python src/system_monitor.py --watch_every_n_seconds 5 &
       - python src/train.py -c configs/train.yaml --trainer.gpus=1 --trainer.max_epochs=50
 
   # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_1_node_4_gpus ml-template-mnist
@@ -49,6 +52,8 @@ jobs:
         shm_size: 650g
       env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
+      - export MKL_THREADING_LAYER="GNU"
+      - python src/system_monitor.py --watch_every_n_seconds 5 &
       - python src/train.py -c configs/train.yaml --trainer.gpus=4 --trainer.max_epochs=50
 
   # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_distributed_2_nodes_4_gpus ml-template-mnist
@@ -60,6 +65,8 @@ jobs:
         shm_size: 650g
       env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
+      - export MKL_THREADING_LAYER="GNU"
+      - python src/system_monitor.py --watch_every_n_seconds 5 &
       - python src/train.py -c configs/train.yaml --trainer.num_nodes=2 --trainer.gpus=4 --trainer.max_epochs=50
 
   # let's use the environment variables defined in "env_defaults" section above to make things a bit cleaner
@@ -78,4 +85,6 @@ jobs:
         # {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True, NCCL_DEBUG: INFO, NCCL_DEBUG_SUBSYS: ALL} # for debugging
 
     command:
+      - export MKL_THREADING_LAYER="GNU"
+      - python src/system_monitor.py --watch_every_n_seconds 5 &
       - python src/train.py -c configs/train.yaml --trainer.num_nodes=${NUM_NODES} --trainer.gpus=${NUM_GPUS} --trainer.max_epochs=50
