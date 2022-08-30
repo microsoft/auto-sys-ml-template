@@ -68,9 +68,7 @@ def main(args):
     dt_sleep = args.watch_every_n_seconds
 
     while True:
-        ram_result = os.popen("free -th").readlines()[-1].split()[1:]
-        ram_total, ram_used, ram_free = (float(item.split("Gi")[0]) for item in ram_result)
-        metrics[f"monitor/node_{node_rank:02}/ram_usage_GB"] = ram_used
+        metrics[f"monitor/node_{node_rank:02}/ram_usage_GB"] = psutil.virtual_memory().used / 2**30
         metrics[f"monitor/node_{node_rank:02}/ram_usage_percent"] = psutil.virtual_memory().percent
         metrics[f"monitor/node_{node_rank:02}/cpu_usage_percent"] = psutil.cpu_percent()
         metrics[f"monitor/node_{node_rank:02}/swap"] = psutil.swap_memory().percent
