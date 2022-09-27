@@ -24,11 +24,6 @@ data:
   local_dir: $CONFIG_DIR/../data
   remote_dir: lightning_template/data
 
-# some environment variables to ease up setting of jobs
-env_defaults:
-  NUM_NODES: 2
-  NUM_GPUS: 4
-
 # SKU usage: G1 (single GPU), G4 (quad GPU), G4-V100 (1 machine, 4 V100 gpus), etc...
 jobs:
   # amlt run jobs/amlt.yaml --target-name V100-1x-ded :train_1_node_1_gpu ml-template-mnist
@@ -68,23 +63,3 @@ jobs:
       - export MKL_THREADING_LAYER="GNU"
       - python src/system_monitor.py --watch_every_n_seconds 5 &
       - python src/train.py -c configs/train.yaml --trainer.num_nodes=2 --trainer.gpus=4 --trainer.max_epochs=50
-
-  # let's use the environment variables defined in "env_defaults" section above to make things a bit cleaner
-  # Two $ will be replaced with a single $ when loading the yaml.
-  # Variables with single $ will be replaced from your local environment before interpreting this yaml file.
-
-  # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_distributed_2_nodes_4_gpus_env_vars ml-template-mnist
-  - name: train_distributed_2_nodes_4_gpus_env_vars
-    sku: ${NUM_NODES}xG${NUM_GPUS}
-    process_count_per_node: ${NUM_GPUS}
-    submit_args:
-      container_args:
-        shm_size: 650g
-      env:
-        { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
-        # {AZUREML_COMPUTE_USE_COMMON_RUNTIME: True, NCCL_DEBUG: INFO, NCCL_DEBUG_SUBSYS: ALL} # for debugging
-
-    command:
-      - export MKL_THREADING_LAYER="GNU"
-      - python src/system_monitor.py --watch_every_n_seconds 5 &
-      - python src/train.py -c configs/train.yaml --trainer.num_nodes=${NUM_NODES} --trainer.gpus=${NUM_GPUS} --trainer.max_epochs=50
