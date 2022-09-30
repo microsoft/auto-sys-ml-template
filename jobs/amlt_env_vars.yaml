@@ -37,5 +37,8 @@ jobs:
 
     command:
       - export MKL_THREADING_LAYER="GNU"
-      - python src/system_monitor.py --watch_every_n_seconds 5 &
-      - python src/train.py -c configs/train.yaml --trainer.num_nodes=${NUM_NODES} --trainer.gpus=${NUM_GPUS} --trainer.max_epochs=50
+      - python src/utils/system_monitor.py --watch_every_n_seconds 1 &
+      - python src/train.py base=configs/train.yaml \
+        trainer.num_nodes=${NUM_NODES} \
+        trainer.gpus=${NUM_GPUS} \
+        trainer.max_epochs=50

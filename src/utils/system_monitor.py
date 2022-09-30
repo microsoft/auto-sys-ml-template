@@ -101,6 +101,7 @@ def get_parsed_args():
 
 
 if __name__ == "__main__":
-    print("system_monitor.py")
+    print("system_monitor.py begins")
     args = get_parsed_args()
     main(args)
+    print("system_monitor.py done")

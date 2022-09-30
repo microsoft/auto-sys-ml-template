@@ -1,5 +1,86 @@
 seed_everything: 42
 
-trainer: trainer/default.yaml
-model: model/mnist.yaml
-data: datamodule/mnist.yaml
+trainer:
+  default_root_dir: ${oc.env:AMLT_OUTPUT_DIR,outputs}
+
+  num_nodes: 1
+  devices: 1
+  accelerator: gpu
+  strategy: ddp_find_unused_parameters_false
+
+  min_epochs: 1
+  max_epochs: 10
+  enable_progress_bar: true
+
+  sync_batchnorm: True
+  enable_checkpointing: True
+  resume_from_checkpoint: null
+
+  # debugging
+  fast_dev_run: false
+
+data:
+  _target_: datamodules.mnist_datamodule.MNISTDataModule
+
+  file_params:
+    base_dir: data/
+    train_val_test_split: [55_000, 5_000, 10_000]
+
+  train_params:
+    batch_size: 128
+    num_workers: 0
+    pin_memory: False
+
+model:
+  _target_: models.mnist_module.MNISTLitModule
+
+  mlp_config:
+    input_size: 784
+    lin1_size: 256
+    lin2_size: 256
+    lin3_size: 256
+    output_size: 10
+
+  optimizer_config:
+    lr: 0.001
+    weight_decay: 0.0005
+
+logger:
+  tensorboard:
+    _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
+    save_dir: ${trainer.default_root_dir}/logs
+    name: null
+    version: null
+    log_graph: False
+    default_hp_metric: True
+    prefix: ""
+
+callbacks:
+  checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    dirpath: "${trainer.default_root_dir}/checkpoints/"
+    monitor: "val/acc" # name of the logged metric which determines when model is improving
+    mode: "max" # "max" means higher metric value is better, can be also "min"
+    save_top_k: 1 # save k best models (determined by above metric)
+    save_last: True # additionaly always save model from last epoch
+    verbose: False
+    filename: "epoch_{epoch:03d}"
+    auto_insert_metric_name: False
+
+  early_stopping:
+    _target_: pytorch_lightning.callbacks.EarlyStopping
+    monitor: "val/loss" # name of the logged metric which determines when model is improving
+    mode: "min" # "max" means higher metric value is better, can be also "min"
+    patience: 100 # how many validation epochs of not improving until training stops
+    min_delta: 0 # minimum change in the monitored metric needed to qualify as an improvement
+
+  model_summary:
+    _target_: pytorch_lightning.callbacks.RichModelSummary
+    max_depth: -1
+
+  progress:
+    _target_: pytorch_lightning.callbacks.RichProgressBar
+
+  lr_mon:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: "epoch"

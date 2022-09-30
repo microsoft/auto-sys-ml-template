@@ -1,5 +1,5 @@
 # credits: https://github.com/ashleve/lightning-hydra-template/tree/main/src/datamodules
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 import torch
 from pytorch_lightning import LightningDataModule
@@ -26,12 +26,7 @@ class MNISTDataModule(LightningDataModule):
     """
 
     def __init__(
-        self,
-        data_dir: str = "data/",
-        train_val_test_split: Tuple[int, int, int] = (55_000, 5_000, 10_000),
-        batch_size: int = 64,
-        num_workers: int = 0,
-        pin_memory: bool = False,
+        self, file_params: Dict[str, Union[str, Tuple[int, int, int]]], train_params: Dict[str, Union[int, bool]]
     ):
         super().__init__()
 
@@ -55,8 +50,8 @@ class MNISTDataModule(LightningDataModule):
         This method is called only from a single GPU.
         Do not use it to assign state (self.x = y).
         """
-        MNIST(self.hparams.data_dir, train=True, download=True)
-        MNIST(self.hparams.data_dir, train=False, download=True)
+        MNIST(self.hparams.file_params["base_dir"], train=True, download=True)
+        MNIST(self.hparams.file_params["base_dir"], train=False, download=True)
 
     def setup(self, stage: Optional[str] = None):
         """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
@@ -68,38 +63,38 @@ class MNISTDataModule(LightningDataModule):
 
         # load datasets only if they're not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
-            trainset = MNIST(self.hparams.data_dir, train=True, transform=self.transforms)
-            testset = MNIST(self.hparams.data_dir, train=False, transform=self.transforms)
+            trainset = MNIST(self.hparams.file_params["base_dir"], train=True, transform=self.transforms)
+            testset = MNIST(self.hparams.file_params["base_dir"], train=False, transform=self.transforms)
             dataset = ConcatDataset(datasets=[trainset, testset])
             self.data_train, self.data_val, self.data_test = random_split(
                 dataset=dataset,
-                lengths=self.hparams.train_val_test_split,
+                lengths=self.hparams.file_params["train_val_test_split"],
                 generator=torch.Generator().manual_seed(42),
             )
 
     def train_dataloader(self):
         return DataLoader(
             dataset=self.data_train,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
+            batch_size=self.hparams.train_params["batch_size"],
+            num_workers=self.hparams.train_params["num_workers"],
+            pin_memory=self.hparams.train_params["pin_memory"],
             shuffle=True,
         )
 
     def val_dataloader(self):
         return DataLoader(
             dataset=self.data_val,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
+            batch_size=self.hparams.train_params["batch_size"],
+            num_workers=self.hparams.train_params["num_workers"],
+            pin_memory=self.hparams.train_params["pin_memory"],
             shuffle=False,
         )
 
     def test_dataloader(self):
         return DataLoader(
             dataset=self.data_test,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
+            batch_size=self.hparams.train_params["batch_size"],
+            num_workers=self.hparams.train_params["num_workers"],
+            pin_memory=self.hparams.train_params["pin_memory"],
             shuffle=False,
         )

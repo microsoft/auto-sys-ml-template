@@ -20,12 +20,11 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--config",
-                "configs/train.yaml",
-                "--trainer.num_nodes",
-                "1",
-                "--trainer.gpus",
-                "1"
+                "base=configs/train.yaml",
+                "trainer.num_nodes=1",
+                "trainer.devices=1",
+                "data.train_params.batch_size=256",
+                "model.optimizer_config.lr=1e-3"
             ]
         }
     ]

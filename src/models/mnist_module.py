@@ -1,10 +1,12 @@
 # credits: https://github.com/ashleve/lightning-hydra-template/blob/main/src/models/mnist_module.py
-from typing import Any, List
+from typing import Any, Dict, List, Union
 
 import torch
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
+
+from src.models.components.simple_dense_net import SimpleDenseNet
 
 
 class MNISTLitModule(LightningModule):
@@ -23,17 +25,16 @@ class MNISTLitModule(LightningModule):
 
     def __init__(
         self,
-        net: torch.nn.Module,
-        lr: float = 0.001,
-        weight_decay: float = 0.0005,
+        mlp_config: Dict[str, dict],
+        optimizer_config: Dict[str, Union[float, str, list]],
     ):
         super().__init__()
 
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False, ignore=["net"])
+        self.save_hyperparameters("mlp_config", "optimizer_config")
 
-        self.net = net
+        self.net = SimpleDenseNet(**mlp_config)
 
         # loss function
         self.criterion = torch.nn.CrossEntropyLoss()
@@ -118,6 +119,6 @@ class MNISTLitModule(LightningModule):
         """
         return torch.optim.Adam(
             params=self.parameters(),
-            lr=self.hparams.lr,
-            weight_decay=self.hparams.weight_decay,
+            lr=self.hparams.optimizer_config["lr"],
+            weight_decay=self.hparams.optimizer_config["weight_decay"],
         )

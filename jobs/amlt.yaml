@@ -35,8 +35,10 @@ jobs:
       env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
       - export MKL_THREADING_LAYER="GNU"
-      - python src/system_monitor.py --watch_every_n_seconds 5 &
-      - python src/train.py -c configs/train.yaml --trainer.gpus=1 --trainer.max_epochs=50
+      - python src/utils/system_monitor.py --watch_every_n_seconds 1 &
+      - python src/train.py base=configs/train.yaml \
+        trainer.gpus=1 \
+        trainer.max_epochs=50
 
   # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_1_node_4_gpus ml-template-mnist
   - name: train_1_node_4_gpus
@@ -48,8 +50,10 @@ jobs:
       env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
       - export MKL_THREADING_LAYER="GNU"
-      - python src/system_monitor.py --watch_every_n_seconds 5 &
-      - python src/train.py -c configs/train.yaml --trainer.gpus=4 --trainer.max_epochs=50
+      - python src/utils/system_monitor.py --watch_every_n_seconds 1 &
+      - python src/train.py base=configs/train.yaml \
+        trainer.gpus=4 \
+        trainer.max_epochs=50
 
   # amlt run jobs/amlt.yaml --target-name V100-4x-ded :train_distributed_2_nodes_4_gpus ml-template-mnist
   - name: train_distributed_2_nodes_4_gpus
@@ -61,5 +65,8 @@ jobs:
       env: { AZUREML_COMPUTE_USE_COMMON_RUNTIME: True }
     command:
       - export MKL_THREADING_LAYER="GNU"
-      - python src/system_monitor.py --watch_every_n_seconds 5 &
-      - python src/train.py -c configs/train.yaml --trainer.num_nodes=2 --trainer.gpus=4 --trainer.max_epochs=50
+      - python src/utils/system_monitor.py --watch_every_n_seconds 1 &
+      - python src/train.py base=configs/train.yaml \
+        trainer.num_nodes=2 \
+        trainer.gpus=4 \
+        trainer.max_epochs=50

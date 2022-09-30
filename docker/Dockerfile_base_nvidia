@@ -9,6 +9,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
     build-essential \
+    software-properties-common \
     cmake \
     g++-7 \
     git \
