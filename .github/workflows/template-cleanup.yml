@@ -15,7 +15,7 @@ jobs:
   template-cleanup:
     name: Template Cleanup
     runs-on: ubuntu-latest
-    if: github.event.repository.name != 'ml_template'
+    if: github.event.repository.name != 'auto-sys-ml-template'
     steps:
       # Check out current repository
       - name: Fetch Sources
