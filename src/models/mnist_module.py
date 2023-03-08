@@ -114,8 +114,8 @@ class MNISTLitModule(LightningModule):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
         Normally you'd need one. But in the case of GANs or similar you might have multiple.
 
-        See examples here:
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+        See examples here:     https://pytorch-
+        lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         return torch.optim.Adam(
             params=self.parameters(),
