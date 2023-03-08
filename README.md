@@ -1,6 +1,6 @@
 # Autonomous Systems Research Group: ML Template
 
-This document serves as an onboarding document as well as a template repository to quickstart machine learning experimentation at the Autonomous Systems Research Group at Microsoft.
+This document serves as an onboarding document as well as a template repository to quickstart machine learning experimentation at the [Autonomous Systems Research Group at Microsoft](https://www.microsoft.com/en-us/research/group/autonomous-systems-group-robotics/)
 
 **Note** Use the table of contents icon <img src="./assets/images/table-of-contents.png" width="25" height="25" /> on the top left corner of this document to get to a specific section quickly.
 
